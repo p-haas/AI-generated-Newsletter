@@ -1,0 +1,46 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.egg-info/
+dist/
+build/
+
+# Environment files
+.env
+
+# Credentials files
+credentials.json
+
+# Virtual Environment
+.venv/
+venv/
+env/
+
+# Authentication tokens
+token_*.pickle
+
+# Results
+news_emails_*.json
+newsletter_*.html
+*.log
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Test files
+test_*.py
+validate_*.py
+
+# Cloud Run service manifests (keep only the example in git)
+cloud-run-service.yaml
+cloud-run-service-deployed.yaml

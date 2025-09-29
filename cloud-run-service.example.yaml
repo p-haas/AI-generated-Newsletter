@@ -1,0 +1,43 @@
+apiVersion: serving.knative.dev/v1
+kind: Service
+metadata:
+  name: your-service-name
+  annotations:
+    run.googleapis.com/ingress: all
+spec:
+  template:
+    metadata:
+      annotations:
+        run.googleapis.com/execution-environment: gen2
+        run.googleapis.com/timeout: "3600"
+    spec:
+      serviceAccountName: your-project-id@appspot.gserviceaccount.com
+      containers:
+      - image: gcr.io/your-project-id/your-service-name:latest
+        ports:
+        - containerPort: 8080
+        env:
+        - name: GCP_PROJECT_ID
+          value: "your-project-id"
+        - name: GEMINI_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: gemini-api-key
+              key: latest
+        - name: NEWSLETTER_RECIPIENT
+          valueFrom:
+            secretKeyRef:
+              name: newsletter-recipient
+              key: latest
+        - name: CLOUD_RUN_VERIFY_TOKEN
+          valueFrom:
+            secretKeyRef:
+              name: cloud-run-verify-token
+              key: latest
+        - name: FUNCTION_TARGET
+          value: "main_handler"
+        resources:
+          limits:
+            cpu: "4"
+            memory: "8Gi"
+

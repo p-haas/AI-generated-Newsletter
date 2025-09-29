@@ -1,0 +1,43 @@
+{
+  "items": [
+    {
+      "title": "OpenAI releases new AI model for enterprise",
+      "summary": "OpenAI has launched a new enterprise-focused AI model that integrates with productivity tools and offers enhanced security controls.",
+      "main_topic": "AI",
+      "source_urls": ["https://example.com/openai-enterprise"],
+      "all_sources": [
+        {
+          "sender": "TechCrunch Daily",
+          "subject": "OpenAI unveils enterprise AI suite",
+          "date": "2024-09-15"
+        }
+      ]
+    },
+    {
+      "title": "Global markets rally on positive economic data",
+      "summary": "Stocks rose globally after economic indicators suggested a cooling of inflation and steady job growth across major economies.",
+      "main_topic": "Economy",
+      "source_urls": ["https://example.com/markets-rally"],
+      "all_sources": [
+        {
+          "sender": "Financial Times",
+          "subject": "Markets jump as inflation slows",
+          "date": "2024-09-15"
+        }
+      ]
+    },
+    {
+      "title": "Major acquisition in the private equity space",
+      "summary": "A leading private equity firm announced a $5B acquisition of a healthcare analytics company, expanding its data-driven portfolio.",
+      "main_topic": "Private Equity",
+      "source_urls": ["https://example.com/private-equity"],
+      "all_sources": [
+        {
+          "sender": "DealBook",
+          "subject": "Private equity strikes healthcare deal",
+          "date": "2024-09-15"
+        }
+      ]
+    }
+  ]
+}
