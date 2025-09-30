@@ -139,6 +139,24 @@ else
     echo -e "${YELLOW}⚠️ No credentials.json found. You'll need to upload it manually to Secret Manager.${NC}"
 fi
 
+# Upload Gmail account tokens if available
+echo -e "\n${YELLOW}📨 Uploading Gmail account token pickles (if present)...${NC}"
+for idx in 1 2; do
+    TOKEN_FILE="token_account${idx}.pickle"
+    SECRET_NAME="gmail-token-account${idx}"
+    if [[ -f "${TOKEN_FILE}" ]] && [[ -s "${TOKEN_FILE}" ]]; then
+        echo "Uploading ${TOKEN_FILE} to Secret Manager as ${SECRET_NAME}..."
+        if gcloud secrets describe "${SECRET_NAME}" --quiet 2>/dev/null; then
+            gcloud secrets versions add "${SECRET_NAME}" --data-file="${TOKEN_FILE}"
+        else
+            gcloud secrets create "${SECRET_NAME}" --data-file="${TOKEN_FILE}"
+        fi
+        echo -e "${GREEN}✅ Uploaded ${TOKEN_FILE}${NC}"
+    else
+        echo -e "${YELLOW}⚠️ ${TOKEN_FILE} not found or empty; skipping${NC}"
+    fi
+done
+
 # Build and push Docker image
 echo -e "\n${YELLOW}🐳 Building Docker image...${NC}"
 gcloud builds submit --tag "${IMAGE_NAME}" .

@@ -29,6 +29,27 @@ spec:
             secretKeyRef:
               name: newsletter-recipient
               key: latest
+        # Gmail account configuration
+        # Account 1 (required)
+        - name: ACCOUNT1_NAME
+          value: "Personal Account"
+        - name: ACCOUNT1_EMAIL
+          valueFrom:
+            secretKeyRef:
+              name: account1-email
+              key: latest
+        - name: ACCOUNT1_SECRET_NAME
+          value: "gmail-token-account1"
+        # Account 2 (optional) - remove these if you only use one account
+        - name: ACCOUNT2_NAME
+          value: "Secondary Account"
+        - name: ACCOUNT2_EMAIL
+          valueFrom:
+            secretKeyRef:
+              name: account2-email
+              key: latest
+        - name: ACCOUNT2_SECRET_NAME
+          value: "gmail-token-account2"
         - name: CLOUD_RUN_VERIFY_TOKEN
           valueFrom:
             secretKeyRef:
@@ -40,4 +61,3 @@ spec:
           limits:
             cpu: "4"
             memory: "8Gi"
-
