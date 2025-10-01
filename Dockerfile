@@ -22,6 +22,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy application code
 COPY main.py .
 COPY utils ./utils
+COPY templates ./templates
 
 # Create directory for credentials and tokens
 RUN mkdir -p /app/credentials

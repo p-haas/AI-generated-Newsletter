@@ -42,6 +42,7 @@ GCP_DEPLOYMENT_GUIDE.md
 deploy.sh
 cloud-run-service.yaml
 cloud-run-service-deployed.yaml
+cloud-run-service.example.yaml
 
 # Backup files
 *.backup
@@ -51,10 +52,17 @@ cloud-run-service-deployed.yaml
 test_*
 *_test.py
 
-# Local data files
-*.json.backup
-newsletter_*.html
-news_emails_*.json
-
 # Environment files (will be handled by Secret Manager)
-.env.example 
+.env
+.env.*
+.env.example
+credentials.json
+
+# Local tokens/credentials (never bake into image)
+token_*.pickle
+*.pem
+*.key
+*.crt
+
+# Sample/local data not needed in image
+sample_data/

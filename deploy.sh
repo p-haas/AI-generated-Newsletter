@@ -44,6 +44,20 @@ if [[ ! -d "utils" ]]; then
 fi
 echo -e "${GREEN}✅ Found: utils/${NC}"
 
+# Ensure templates directory and key files exist
+if [[ ! -d "templates" ]]; then
+    echo -e "${RED}❌ Missing required directory: templates/${NC}"
+    echo -e "${RED}   The Dockerfile copies templates/, and the app requires newsletter.html${NC}"
+    exit 1
+fi
+echo -e "${GREEN}✅ Found: templates/${NC}"
+
+if [[ ! -f "templates/newsletter.html" ]]; then
+    echo -e "${RED}❌ Missing required template: templates/newsletter.html${NC}"
+    exit 1
+fi
+echo -e "${GREEN}✅ Found: templates/newsletter.html${NC}"
+
 # Determine project number and default compute service account
 PROJECT_NUMBER=$(gcloud projects describe "${PROJECT_ID}" --format='value(projectNumber)')
 RUNTIME_SA="${PROJECT_NUMBER}-compute@developer.gserviceaccount.com"
