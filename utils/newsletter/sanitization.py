@@ -12,11 +12,23 @@ ALLOWED_TAGS = [
     "br",
     "strong",
     "em",
+    "b",
+    "i",
     "a",
     "ul",
+    "ol",
     "li",
+    "span",
+    "div",
+    "h1",
+    "h2",
+    "h3",
+    "h4",
+    "blockquote",
+    "code",
+    "pre",
 ]
-ALLOWED_ATTRIBUTES = {"a": ["href", "title"]}
+ALLOWED_ATTRIBUTES = {"a": ["href", "title", "target", "rel"]}
 
 
 def sanitize_content(content: str) -> str:
@@ -28,7 +40,12 @@ def sanitize_content(content: str) -> str:
 def sanitize_html_content(content: str) -> str:
     """Sanitize HTML content while allowing a limited safe subset."""
 
-    return bleach.clean(content, tags=ALLOWED_TAGS, attributes=ALLOWED_ATTRIBUTES)
+    return bleach.clean(
+        content,
+        tags=ALLOWED_TAGS,
+        attributes=ALLOWED_ATTRIBUTES,
+        strip=True,
+    )
 
 
 def sanitize_item(item: Dict[str, str], keys: Iterable[str]) -> Dict[str, str]:

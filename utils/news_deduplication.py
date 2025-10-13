@@ -149,6 +149,15 @@ def deduplicate_category_items(
                     response_schema=DeduplicationResult,
                     return_parsed=True,
                 )
+                # Defensive: ensure result is always a proper model, never a dict
+                if isinstance(result, dict):
+                    try:
+                        result = DeduplicationResult(**result)
+                        print(f"    ⚠️ Had to coerce dict response to DeduplicationResult")
+                    except Exception as e:
+                        print(f"    ❌ Failed to coerce dict to model: {e}")
+                        # This will trigger the validation check below and raise an error
+                        raise ValueError(f"Failed to coerce LLM response to DeduplicationResult: {e}")
                 end_time = time.time()
                 print(
                     f"    ✅ Deduplication call finished in {end_time - start_time:.2f} seconds"

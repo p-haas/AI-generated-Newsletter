@@ -106,7 +106,7 @@ pip install -r requirements.txt
    ```
    The CLI surfaces progress updates, including counts of processed emails, extracted stories, and final categories. The resulting newsletter is sent to the configured recipient.
 
-5. **Experiment offline** – Use [`sample_data/test_newsletter.json`](./sample_data/test_newsletter.json) with helpers from [`utils/newsletter`](./utils/newsletter) to inspect rendering logic without accessing live inboxes.
+5. **Preview rendering** – Load [`sample_data/test_newsletter.json`](./sample_data/test_newsletter.json) in a Python shell and feed it to `utils.newsletter.generate_html_newsletter` to validate template changes without touching live inboxes.
 
 ## Configuration Reference
 

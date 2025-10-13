@@ -2,12 +2,11 @@
 
 from __future__ import annotations
 
-import asyncio
 import base64
 from datetime import datetime
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
-from typing import List, Sequence
+from typing import Sequence
 
 import structlog
 
@@ -17,7 +16,7 @@ from ..settings import ACCOUNTS_CONFIG, NEWSLETTER_RECIPIENT
 logger = structlog.get_logger(__name__)
 
 
-def _ensure_recipients(recipients: Sequence[str] | None) -> List[str]:
+def _ensure_recipients(recipients: Sequence[str] | None) -> list[str]:
     if recipients:
         return list(recipients)
     return [NEWSLETTER_RECIPIENT]
@@ -45,7 +44,16 @@ def send_newsletter_email(
         message["from"] = sender_email
         message["subject"] = newsletter_title
 
+        # Create plain text version (simple fallback)
+        text_content = f"{newsletter_title}\n\nPlease view this email in an HTML-capable email client to see the formatted newsletter."
+        text_part = MIMEText(text_content, "plain", "utf-8")
+
+        # Create HTML version
         html_part = MIMEText(html_content, "html", "utf-8")
+
+        # Attach parts in order: text first, then HTML
+        # Email clients will prefer HTML if available
+        message.attach(text_part)
         message.attach(html_part)
 
         raw_message = base64.urlsafe_b64encode(message.as_bytes()).decode()
@@ -70,28 +78,3 @@ def send_newsletter_email(
             file.write(html_content)
         logger.warning("newsletter_saved_to_disk", path=filename)
         return False
-
-
-async def send_newsletter_async(
-    html_content: str,
-    newsletter_title: str,
-    recipients: Sequence[str],
-    *,
-    sender_index: int = 0,
-) -> List[bool]:
-    """Send newsletter to multiple recipients concurrently."""
-
-    async def _send_single(recipient: str) -> bool:
-        loop = asyncio.get_running_loop()
-        return await loop.run_in_executor(
-            None,
-            send_newsletter_email,
-            html_content,
-            newsletter_title,
-            [recipient],
-        )
-
-    tasks = [_send_single(recipient) for recipient in recipients]
-    results = await asyncio.gather(*tasks, return_exceptions=False)
-    logger.info("async_send_completed", results=results)
-    return results

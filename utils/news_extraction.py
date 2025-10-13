@@ -228,6 +228,15 @@ def _extract_single_email(
             response_schema=NewsExtractionResult,
             return_parsed=True,
         )
+        # Defensive: ensure result is always a proper model, never a dict
+        if isinstance(extraction_result, dict):
+            try:
+                extraction_result = NewsExtractionResult(**extraction_result)
+                print(f"    ⚠️ Had to coerce dict response to NewsExtractionResult")
+            except Exception as e:
+                print(f"    ❌ Failed to coerce dict to model: {e}")
+                # Use empty result as fallback
+                extraction_result = NewsExtractionResult(items=[])
 
         news_items = extraction_result.items if extraction_result else []
         print(f"    ✅ Extracted {len(news_items)} news items")

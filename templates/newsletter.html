@@ -5,32 +5,59 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{ newsletter.title }}</title>
     <style>
-{{ styles }}
+{{ styles | safe }}
     </style>
 </head>
 <body class="theme-{{ selected_theme }}">
+{%- macro render_key_points(item) -%}
+    {% set key_points = item.get('key_points', []) %}
+    {% if key_points %}
+    <ul class="news-points" aria-label="Key points">
+        {% for point in key_points %}
+        <li>{{ point|e }}</li>
+        {% endfor %}
+    </ul>
+    {% endif %}
+{%- endmacro -%}
+
+{%- macro render_sources(item) -%}
+    {% set sources = item.get('all_sources', []) %}
+    {% set urls = item.get('source_urls', []) %}
+    {% if sources or urls %}
+    <ul class="source-list" aria-label="Related sources and links">
+        {% for source in sources %}
+        {% set sender = source.get('sender', 'Unknown sender') %}
+        {% set subject = source.get('subject') %}
+        {% set account = source.get('account') %}
+        {% set date = source.get('date') %}
+        <li class="source-item">
+            <span class="source-icon">📧</span>
+            <span class="source-label">{{ sender|e }}</span>
+            {% if subject %}<span class="source-detail"> — {{ subject|e }}</span>{% endif %}
+            {% if account %}<span class="source-detail"> ({{ account|e }})</span>{% endif %}
+            {% if date %}<span class="source-detail"> • {{ date|e }}</span>{% endif %}
+        </li>
+        {% endfor %}
+        {% for raw_url in urls %}
+        {% set clean_url = (raw_url|string)|trim %}
+        {% set display_url = clean_url.replace('https://', '').replace('http://', '').replace('www.', '') %}
+        <li class="source-item">
+            <span class="source-icon">🔗</span>
+            <a href="{{ clean_url }}" class="source-link">{{ display_url|e }}</a>
+        </li>
+        {% endfor %}
+    </ul>
+    {% endif %}
+{%- endmacro -%}
+
     <main class="newsletter-container" role="main" aria-label="Daily Newsletter">
         <header class="header" role="banner">
             <h1 aria-label="Newsletter title">📰 {{ newsletter.title }}</h1>
-            <p class="date">{{ (newsletter.generated_at or "") }}</p>
+            {% set display_date = newsletter.display_date or newsletter.generated_at %}
+            {% if display_date %}
+            <p class="date">{{ display_date }}</p>
+            {% endif %}
         </header>
-
-        {% if newsletter.metrics %}
-        <section class="stats" aria-label="Newsletter metrics">
-            <div class="stats-item">
-                <span class="stats-number">{{ newsletter.metrics.total_stories }}</span>
-                <span>News Stories</span>
-            </div>
-            <div class="stats-item">
-                <span class="stats-number">{{ newsletter.metrics.stories_by_category|length }}</span>
-                <span>Categories</span>
-            </div>
-            <div class="stats-item">
-                <span class="stats-number">{{ '%.2f'|format(newsletter.metrics.generation_time) }}</span>
-                <span>Generation Time (s)</span>
-            </div>
-        </section>
-        {% endif %}
 
         {% if newsletter.executive_summary %}
         <section class="executive-summary" aria-label="Executive summary">
@@ -39,45 +66,50 @@
         </section>
         {% endif %}
 
-        {% for category in newsletter.categories %}
-        <section class="category" aria-labelledby="category-{{ loop.index }}">
-            <h2 id="category-{{ loop.index }}" class="category-title">{{ category.name }}</h2>
+        {% set categories = newsletter.categories or [] %}
+        {% if categories %}
+            {% for category in categories %}
+            <section class="category" aria-labelledby="category-{{ loop.index }}">
+                <h2 id="category-{{ loop.index }}" class="category-title">{{ category.name or "Untitled Category" }}</h2>
 
-            {% for subcategory in category.subcategories %}
-            <details class="subcategory" open>
-                <summary class="subcategory-title">{{ subcategory.name }}</summary>
-                {% if subcategory['intro'] %}
-                <p class="subcategory-intro">{{ subcategory['intro']|safe }}</p>
-                {% endif %}
+                {% set subcategories = category.subcategories or [] %}
+                {% for subcategory in subcategories %}
+                <div class="subcategory">
+                    <div class="subcategory-header">
+                        <h3 class="subcategory-title">{{ subcategory.name or "Highlights" }}</h3>
+                    {% set intro = subcategory.get('intro') %}
+                    {% if intro %}
+                    <p class="subcategory-intro">{{ intro|safe }}</p>
+                    {% endif %}
+                    </div>
 
-                {% for item in subcategory['items'] %}
-                <article class="news-item" aria-label="News item">
-                    <h3 class="news-title">{{ item.title }}</h3>
-                    <p class="news-summary">{{ item.summary }}</p>
-                    <footer class="news-sources" aria-label="Sources">
-                        {% set sources = item.all_sources or [] %}
-                        {% if sources %}
-                            {% for source in sources %}
-                                <p class="source-item">📧 {{ source.sender }} - {{ source.subject }}</p>
-                            {% endfor %}
-                        {% endif %}
-                        {% if item.source_urls %}
-                            {% for url in item.source_urls %}
-                                <p class="source-item">🔗 <a href="{{ url }}" class="source-link">{{ url }}</a></p>
-                            {% endfor %}
-                        {% endif %}
-                    </footer>
-                </article>
-                {% endfor %}
-            </details>
+                    {% set items = subcategory.get('items', []) %}
+                    {% if items %}
+                    <div class="subcategory-items">
+                        {% for item in items %}
+                        <article class="news-item" aria-label="News item">
+                            <h4 class="news-title">{{ item.title|safe }}</h4>
+                            <p class="news-summary">{{ item.summary|safe }}</p>
+                            {{ render_key_points(item) | safe }}
+                            <footer class="news-sources" aria-label="Sources">
+                                {{ render_sources(item) | safe }}
+                            </footer>
+                        </article>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                        <p class="news-summary">No news items available for this subcategory.</p>
+                    {% endif %}
+                </div>
             {% endfor %}
-        </section>
         {% endfor %}
+        {% else %}
+        <section class="category" aria-label="No news available">
+            <h2 class="category-title">No News Items</h2>
+            <p class="news-summary">We could not find any stories to share today.</p>
+        </section>
+        {% endif %}
 
-        <footer class="footer" role="contentinfo">
-            <p>Generated by News Tracker AI on {{ newsletter.generated_at }}</p>
-            <p>This newsletter aggregates news from your personal email accounts.</p>
-        </footer>
     </main>
 </body>
 </html>

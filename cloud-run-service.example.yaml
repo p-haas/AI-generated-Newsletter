@@ -61,3 +61,4 @@ spec:
           limits:
             cpu: "4"
             memory: "8Gi"
+

@@ -14,6 +14,22 @@ GEMINI_PRO_MODEL = "models/gemini-2.5-pro"
 # Environment configuration
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 NEWSLETTER_RECIPIENT = os.getenv("NEWSLETTER_RECIPIENT", "default_recipient@example.com")
+NEWSLETTER_SENDER_EMAIL = os.getenv("NEWSLETTER_SENDER_EMAIL", "").strip()
+
+
+def _split_csv_env(value: str) -> list[str]:
+    return [item.strip() for item in value.split(",") if item.strip()]
+
+
+NEWSLETTER_EXCLUDED_SENDERS = _split_csv_env(
+    os.getenv("NEWSLETTER_EXCLUDED_SENDERS", "")
+)
+
+if NEWSLETTER_SENDER_EMAIL:
+    NEWSLETTER_EXCLUDED_SENDERS.append(NEWSLETTER_SENDER_EMAIL)
+
+# Deduplicate while preserving order
+NEWSLETTER_EXCLUDED_SENDERS = list(dict.fromkeys(NEWSLETTER_EXCLUDED_SENDERS))
 
 SCOPES = [
     "https://www.googleapis.com/auth/gmail.readonly",

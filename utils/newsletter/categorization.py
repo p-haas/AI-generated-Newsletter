@@ -6,7 +6,6 @@ import json
 import time
 from dataclasses import dataclass, field
 from datetime import datetime
-from pathlib import Path
 from typing import Any, Callable, Dict, Iterable, List
 
 import structlog
@@ -47,7 +46,9 @@ class NewsletterMetrics:
     generation_time: float
 
 
-def retry(max_attempts: int = 3, backoff_seconds: int = 2) -> Callable[[Callable[..., Any]], Callable[..., Any]]:
+def retry(
+    max_attempts: int = 3, backoff_seconds: int = 2
+) -> Callable[[Callable[..., Any]], Callable[..., Any]]:
     """Simple retry decorator with exponential backoff."""
 
     def decorator(func: Callable[..., Any]) -> Callable[..., Any]:
@@ -83,7 +84,9 @@ def retry(max_attempts: int = 3, backoff_seconds: int = 2) -> Callable[[Callable
 
 
 @retry(max_attempts=3, backoff_seconds=2)
-def categorize_with_gemini(prompt: str, system_instruction: Iterable[str]) -> NewsletterStructure:
+def categorize_with_gemini(
+    prompt: str, system_instruction: Iterable[str]
+) -> NewsletterStructure:
     """Call Gemini with retries and return a structured newsletter."""
 
     return call_gemini_sdk(
@@ -96,7 +99,9 @@ def categorize_with_gemini(prompt: str, system_instruction: Iterable[str]) -> Ne
     )
 
 
-def _build_prompt_items(deduplicated_items: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+def _build_prompt_items(
+    deduplicated_items: List[Dict[str, Any]],
+) -> List[Dict[str, Any]]:
     items_for_categorization = []
     for idx, item in enumerate(deduplicated_items):
         sanitized_item = sanitize_item(item, ["title", "summary", "main_topic"])
@@ -124,7 +129,9 @@ def collect_metrics(
     total_stories = 0
 
     for category in newsletter_content.get("categories", []):
-        category_total = sum(len(sub["items"]) for sub in category.get("subcategories", []))
+        category_total = sum(
+            len(sub["items"]) for sub in category.get("subcategories", [])
+        )
         stories_by_category[category["name"]] = category_total
         total_stories += category_total
 
@@ -184,7 +191,9 @@ def categorize_and_generate_newsletter(
     start_time = time.perf_counter()
 
     try:
-        newsletter_structure = categorize_with_gemini(prompt=prompt, system_instruction=SYSTEM_INSTRUCTION)
+        newsletter_structure = categorize_with_gemini(
+            prompt=prompt, system_instruction=SYSTEM_INSTRUCTION
+        )
     except Exception as error:  # noqa: BLE001
         logger.error("newsletter_generation_failed", error=str(error))
         if not configuration.fallback_to_keywords:
@@ -194,12 +203,31 @@ def categorize_and_generate_newsletter(
         fallback_categorized_count = len(deduplicated_items)
     else:
         current_date = time.strftime("%B %d, %Y")
-        title = newsletter_structure.newsletter_title or f"Daily News Digest - {current_date}"
+        title = (
+            newsletter_structure.newsletter_title
+            or f"Daily News Digest - {current_date}"
+        )
+        display_date = datetime.now().strftime("%A, %B %d, %Y")
+
+        for placeholder in (
+            "[Date]",
+            "[date]",
+            "{Date}",
+            "{date}",
+            "{{Date}}",
+            "{{date}}",
+            "<<Date>>",
+        ):
+            if placeholder in title:
+                title = title.replace(placeholder, display_date)
+
         newsletter_content = {
             "title": title,
-            "executive_summary": sanitize_html_content(newsletter_structure.executive_summary)
-            if configuration.enable_executive_summary
-            else "",
+            "executive_summary": (
+                sanitize_html_content(newsletter_structure.executive_summary)
+                if configuration.enable_executive_summary
+                else ""
+            ),
             "categories": [],
         }
 
@@ -207,9 +235,15 @@ def categorize_and_generate_newsletter(
             subcategories = []
             for subcategory in category.subcategories:
                 items: List[Dict[str, Any]] = []
-                for item_id in subcategory.item_ids[: configuration.max_items_per_category]:
+                for item_id in subcategory.item_ids[
+                    : configuration.max_items_per_category
+                ]:
                     if item_id < len(deduplicated_items):
-                        items.append(sanitize_item(deduplicated_items[item_id], ["title", "summary"]))
+                        items.append(
+                            sanitize_item(
+                                deduplicated_items[item_id], ["title", "summary"]
+                            )
+                        )
                 subcategories.append(
                     {
                         "name": subcategory.subcategory_name,
@@ -227,12 +261,19 @@ def categorize_and_generate_newsletter(
 
         ai_categorized_count = len(deduplicated_items)
         if configuration.custom_categories:
-            logger.info("custom_categories_requested", categories=configuration.custom_categories)
+            logger.info(
+                "custom_categories_requested",
+                categories=configuration.custom_categories,
+            )
 
     generation_time = time.perf_counter() - start_time
 
     newsletter_content.setdefault("executive_summary", "")
-    newsletter_content["generated_at"] = datetime.now().strftime("%A, %B %d, %Y %H:%M:%S")
+
+    now = datetime.now()
+    newsletter_content["generated_at"] = now.strftime("%A, %B %d, %Y %H:%M:%S")
+    newsletter_content["display_date"] = now.strftime("%A, %B %d, %Y")
+    newsletter_content["generated_time"] = now.strftime("%H:%M:%S")
 
     if not validate_newsletter_structure(newsletter_content):
         logger.error("newsletter_structure_invalid")
@@ -255,45 +296,3 @@ def categorize_and_generate_newsletter(
     )
 
     return newsletter_content
-
-
-def _load_sample_data(sample_data_file: str) -> Dict[str, Any]:
-    path = Path(sample_data_file)
-    if not path.exists():
-        raise FileNotFoundError(f"Sample data file not found: {sample_data_file}")
-    with path.open("r", encoding="utf-8") as file:
-        return json.load(file)
-
-
-def generate_test_newsletter(
-    sample_data_file: str = "sample_data/test_newsletter.json", *, use_fallback: bool = True
-) -> str:
-    """Generate a newsletter from sample data for testing purposes."""
-
-    data = _load_sample_data(sample_data_file)
-    config = NewsletterConfig()
-
-    if use_fallback:
-        newsletter_content = create_fallback_newsletter(data["items"])
-        newsletter_content.setdefault("executive_summary", "")
-        newsletter_content["theme"] = config.theme
-        newsletter_content["generated_at"] = datetime.now().strftime(
-            "%A, %B %d, %Y %H:%M:%S"
-        )
-        newsletter_content["metrics"] = collect_metrics(
-            newsletter_content,
-            ai_categorized_count=0,
-            fallback_categorized_count=len(data["items"]),
-            generation_time=0.0,
-        )
-    else:
-        newsletter_content = categorize_and_generate_newsletter(data["items"], config)
-
-    return preview_newsletter(newsletter_content)
-
-
-def preview_newsletter(newsletter_content: Dict[str, Any]) -> str:
-    """Render a preview of the newsletter without sending it."""
-
-    theme = newsletter_content.get("theme", "light")
-    return generate_html_newsletter(newsletter_content, theme=theme)

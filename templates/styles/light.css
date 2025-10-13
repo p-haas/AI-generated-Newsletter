@@ -1,168 +1,54 @@
-body {
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    line-height: 1.6;
-    color: #2c3e50;
-    background-color: #f5f6fa;
-    margin: 0;
-    padding: 20px;
-}
+body.theme-light {
+    --font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    --body-line-height: 1.6;
+    --body-bg: #f5f6fa;
+    --body-text: #2c3e50;
+    --body-padding: 20px;
 
-.newsletter-container {
-    max-width: 800px;
-    margin: 0 auto;
-    background-color: #ffffff;
-    border-radius: 12px;
-    box-shadow: 0 10px 30px rgba(44, 62, 80, 0.1);
-    padding: 32px;
-}
+    --container-max-width: 800px;
+    --container-padding: 32px;
+    --container-radius: 12px;
+    --container-shadow: 0 10px 30px rgba(44, 62, 80, 0.1);
+    --container-bg: #ffffff;
 
-.header {
-    text-align: center;
-    border-bottom: 3px solid #2980b9;
-    padding-bottom: 20px;
-    margin-bottom: 30px;
-}
+    --header-align: center;
+    --header-border-width: 3px;
+    --header-border: #2980b9;
+    --header-title: #2c3e50;
+    --date-text: #7f8c8d;
 
-.header h1 {
-    font-size: 2.4em;
-    margin: 0;
-    color: #2c3e50;
-}
+    --stats-bg: #ecf4fb;
+    --stats-radius: 10px;
+    --stats-text: #2c3e50;
+    --stats-number: #e74c3c;
 
-.date {
-    color: #7f8c8d;
-    font-size: 1em;
-}
+    --summary-bg: linear-gradient(135deg, rgba(41, 128, 185, 0.12), rgba(142, 68, 173, 0.12));
+    --summary-border-width: 4px;
+    --summary-border: #2980b9;
+    --summary-heading: #2980b9;
 
-.stats {
-    display: flex;
-    justify-content: space-around;
-    margin-bottom: 30px;
-    background-color: #ecf4fb;
-    border-radius: 10px;
-    padding: 18px;
-}
+    --category-background: linear-gradient(135deg, #3498db, #2980b9);
+    --category-title-color: #ffffff;
+    --category-radius: 10px;
 
-.stats-item {
-    text-align: center;
-    color: #2c3e50;
-}
+    --subcategory-bg: #f8fafc;
+    --subcategory-border: #e1e8ed;
+    --subcategory-radius: 10px;
+    --subcategory-title: #2c3e50;
+    --subcategory-intro: #7f8c8d;
 
-.stats-number {
-    display: block;
-    font-size: 1.6em;
-    font-weight: bold;
-    color: #e74c3c;
-}
+    --news-item-bg: #ffffff;
+    --news-item-radius: 10px;
+    --news-item-border-width: 4px;
+    --news-item-border: #e74c3c;
+    --news-item-shadow: 0 6px 12px rgba(0, 0, 0, 0.05);
+    --news-summary: #34495e;
 
-.executive-summary {
-    background: linear-gradient(135deg, rgba(41, 128, 185, 0.12), rgba(142, 68, 173, 0.12));
-    border-left: 4px solid #2980b9;
-    padding: 20px;
-    border-radius: 10px;
-    margin-bottom: 30px;
-}
+    --news-sources-border: #ecf0f1;
+    --news-sources-text: #7f8c8d;
+    --source-link: #2980b9;
 
-.executive-summary h2 {
-    margin-top: 0;
-    color: #2980b9;
-}
-
-.category {
-    margin-bottom: 40px;
-}
-
-.category-title {
-    background: linear-gradient(135deg, #3498db, #2980b9);
-    color: #ffffff;
-    padding: 16px 24px;
-    border-radius: 10px;
-    font-size: 1.4em;
-}
-
-.subcategory {
-    margin-top: 18px;
-    background-color: #f8fafc;
-    border-radius: 10px;
-    border: 1px solid #e1e8ed;
-    padding: 16px;
-}
-
-.subcategory-title {
-    font-size: 1.2em;
-    font-weight: 600;
-    color: #2c3e50;
-}
-
-.subcategory-intro {
-    color: #7f8c8d;
-    font-style: italic;
-    margin-bottom: 15px;
-}
-
-.news-item {
-    background-color: #ffffff;
-    border-radius: 10px;
-    border-left: 4px solid #e74c3c;
-    padding: 18px;
-    margin-bottom: 16px;
-    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.05);
-}
-
-.news-title {
-    font-size: 1.1em;
-    font-weight: 600;
-    margin-bottom: 12px;
-}
-
-.news-summary {
-    color: #34495e;
-    margin-bottom: 16px;
-}
-
-.news-sources {
-    border-top: 1px solid #ecf0f1;
-    padding-top: 10px;
-    font-size: 0.9em;
-    color: #7f8c8d;
-}
-
-.source-item {
-    margin: 4px 0;
-}
-
-.source-link {
-    color: #2980b9;
-    text-decoration: none;
-}
-
-.source-link:hover {
-    text-decoration: underline;
-}
-
-.footer {
-    text-align: center;
-    border-top: 2px solid #ecf0f1;
-    padding-top: 20px;
-    color: #7f8c8d;
-    font-size: 0.9em;
-}
-
-@media (max-width: 600px) {
-    body {
-        padding: 12px;
-    }
-
-    .newsletter-container {
-        padding: 20px;
-    }
-
-    .stats {
-        flex-direction: column;
-        gap: 12px;
-    }
-
-    .stats-item {
-        margin: 0;
-    }
+    --footer-border-width: 2px;
+    --footer-border: #ecf0f1;
+    --footer-text: #7f8c8d;
 }

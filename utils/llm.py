@@ -9,6 +9,37 @@ from google.genai import types as gtypes
 
 from .settings import GEMINI_FLASH_MODEL, GEMINI_API_KEY
 
+try:
+    # Optional import: only used if caller passes a Pydantic schema
+    from pydantic import BaseModel  # type: ignore
+except Exception:  # pragma: no cover - optional dependency
+    BaseModel = object  # type: ignore
+
+
+def _coerce_to_schema(schema: Any, data: Any) -> Any:
+    """Coerce raw data into the provided response schema when possible.
+
+    - If `data` is already a Pydantic BaseModel, return it unchanged.
+    - If `schema` is a Pydantic model class and `data` is a dict, instantiate it.
+    - Otherwise, return data unchanged.
+    """
+    # If data is already the right type, return it
+    if hasattr(data, '__class__') and hasattr(schema, '__name__'):
+        if data.__class__.__name__ == schema.__name__:
+            return data
+    
+    # Try to instantiate the schema with the data if it's a dict
+    if isinstance(data, dict):
+        try:
+            # Check if schema has a callable constructor (Pydantic model)
+            if callable(schema) and hasattr(schema, '__fields__'):
+                return schema(**data)
+        except Exception as e:
+            # Log but don't fail - return the dict
+            print(f"⚠️ Schema coercion failed for {getattr(schema, '__name__', schema)}: {e}")
+    
+    return data
+
 
 def _get_api_key() -> str:
     """Resolve API key with fallback order: settings → GOOGLE_API_KEY → GEMINI_API_KEY env."""
@@ -91,13 +122,14 @@ def call_gemini_sdk(
         # If caller wants parsed and we requested structured output, return it.
         if return_parsed and (response_schema is not None):
             if getattr(resp, "parsed", None) is not None:
-                return resp.parsed
+                return _coerce_to_schema(response_schema, resp.parsed)
             else:
                 # Fallback: try to parse the text response if parsed is None
                 if hasattr(resp, "text") and resp.text:
                     try:
                         import json
-                        return json.loads(resp.text.strip())
+                        raw = json.loads(resp.text.strip())
+                        return _coerce_to_schema(response_schema, raw)
                     except (json.JSONDecodeError, AttributeError):
                         # If JSON parsing fails, raise an error to indicate the failure
                         raise RuntimeError("Failed to parse structured response - response.parsed is None or missing and text is not valid JSON")

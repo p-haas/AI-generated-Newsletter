@@ -19,7 +19,7 @@ import random
 import re
 import time
 from datetime import datetime, timedelta
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, Iterable, List, Optional, Tuple
 
 try:  # Optional dependency for nicer HTML→text
     from bs4 import BeautifulSoup  # type: ignore
@@ -34,7 +34,7 @@ except Exception:  # pragma: no cover - optional
 
 from .llm import call_gemini_sdk
 from .models import NewsClassificationResult
-from .settings import GEMINI_FLASH_LITE_MODEL
+from .settings import GEMINI_FLASH_LITE_MODEL, NEWSLETTER_EXCLUDED_SENDERS
 
 # ----------------------------
 # Tunables / constants
@@ -119,6 +119,20 @@ def _extract_body_from_payload(payload: Dict[str, Any]) -> Tuple[str, str]:
 
 
 # ----------------------------
+# Query helpers
+# ----------------------------
+
+
+def _build_last_day_query(excluded_senders: Iterable[str]) -> str:
+    """Compose Gmail search query for the last 24h while excluding senders."""
+    terms = [DEFAULT_QUERY_LAST_DAY]
+    for sender in excluded_senders:
+        if sender:
+            terms.append(f"-from:{sender}")
+    return " ".join(terms).strip()
+
+
+# ----------------------------
 # Gmail helpers
 # ----------------------------
 
@@ -126,7 +140,8 @@ def _extract_body_from_payload(payload: Dict[str, Any]) -> Tuple[str, str]:
 def get_emails_last_day(service) -> List[Dict[str, Any]]:
     """Get all emails from the last 24 hours using Gmail's query syntax and pagination."""
     try:
-        query = DEFAULT_QUERY_LAST_DAY  # e.g., "newer_than:1d"
+        query = _build_last_day_query(NEWSLETTER_EXCLUDED_SENDERS)
+        print(f"Using Gmail query: {query}")
         messages: List[Dict[str, Any]] = []
         page_token: Optional[str] = None
         while True:
@@ -326,6 +341,22 @@ def is_news_related(email_content: Dict[str, Any]) -> NewsClassificationResult:
                 response_schema=NewsClassificationResult,
                 return_parsed=True,
             )
+            # Defensive: ensure result is always a proper model, never a dict
+            if isinstance(result, dict):
+                try:
+                    result = NewsClassificationResult(**result)
+                    print(f"    ⚠️ Had to coerce dict response to NewsClassificationResult")
+                except Exception as e:
+                    print(f"    ❌ Failed to coerce dict to model: {e}")
+                    # Return a safe fallback instead of the dict
+                    return NewsClassificationResult(
+                        is_news=False,
+                        confidence="low",
+                        reason="Failed to parse LLM response",
+                        primary_category=None,
+                        secondary_categories=[],
+                        topic_category=None,
+                    )
             print(f"    ✅ Gemini response: {getattr(result, 'reason', '')}")
             return result
 

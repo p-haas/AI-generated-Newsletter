@@ -11,3 +11,4 @@ psutil
 pydantic
 python-dotenv
 structlog
+premailer
